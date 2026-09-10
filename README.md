@@ -340,6 +340,7 @@ All techniques demonstrated in this repository are intended for:
 ## 👨‍💻 Author
 
 Vishwa Erroju
+
 Cybersecurity Enthusiast | Offensive Security Learner | Bug Hunter
 
 > **Learn. Hunt. Exploit. Secure.**
