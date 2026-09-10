@@ -1,2 +1,345 @@
-# IATCQ-2026-writeup
-IATCQ 2026 Bug Hunting — hands-on web security write-ups covering vulnerability discovery, exploitation, and multi-stage attack chains.
+# Indian Army Terrier Cyber Quest 2026 — Bug Hunting
+
+## Cybersecurity | Web Application Security | Offensive Security
+
+This repository documents my participation in **Terrier Cyber Quest 2026 (TCQ 3.0)** under the **Bug Hunting** track.
+
+The project contains sanitized technical notes and methodology from the challenges I worked on, focusing on practical web application security, vulnerability exploitation, traffic analysis, and multi-stage attack chains.
+
+> **Disclaimer:** This repository is intended for educational and portfolio purposes. All testing documented here was performed within an authorized challenge/CTF environment. No unauthorized systems were targeted.
+
+---
+
+## 🏆 About the Challenge
+
+**Terrier Cyber Quest (TCQ)** is a cybersecurity initiative associated with the **Territorial Army** and **CyberPeace**, designed to provide participants with hands-on cybersecurity challenges and practical security problem-solving experience.
+
+My participation focused on the **Bug Hunting / offensive security** aspect of the competition, where I investigated intentionally vulnerable applications and challenge environments.
+
+---
+
+# 🔎 Skills Demonstrated
+
+Through the challenges documented in this repository, I practiced:
+
+* Web Application Security
+* Vulnerability Discovery
+* Vulnerability Exploitation
+* Prototype Pollution
+* SQL Injection
+* Authentication Bypass
+* Account Enumeration
+* HTTP Traffic Analysis
+* Burp Suite
+* Source Code / HTML Analysis
+* Base64 Analysis
+* Steganography
+* Linux Command-Line Tools
+* Attack Chain Development
+* Security Documentation
+* CTF Methodology
+
+---
+
+# 🧪 Challenge 1 — Spectral_Override
+
+## Vulnerability: Prototype Pollution
+
+The `Spectral_Override` challenge contained a **prototype pollution vulnerability** within its configuration update functionality.
+
+The application accepted a user-controlled property path and value. By manipulating the property path to traverse the JavaScript prototype chain, it was possible to modify a prototype property and alter application authorization state.
+
+### Exploitation Concept
+
+The vulnerable property traversal followed the pattern:
+
+```text
+constructor → prototype
+```
+
+The challenge payload conceptually modified:
+
+```text
+isAdmin = true
+```
+
+This caused the application's administrative state to be affected and allowed access to functionality that was intended to be restricted.
+
+### Attack Flow
+
+```text
+User-Controlled Input
+        ↓
+Configuration Update
+        ↓
+Property Path Manipulation
+        ↓
+constructor → prototype
+        ↓
+Prototype Pollution
+        ↓
+isAdmin = true
+        ↓
+Authorization State Modified
+        ↓
+Restricted Functionality
+        ↓
+Challenge Objective
+```
+
+The original POC demonstrated this using an array-based property path supplied through the challenge interface.
+
+### Security Impact
+
+Prototype pollution can become a serious vulnerability when applications rely on inherited object properties for security-sensitive decisions.
+
+Potential consequences can include:
+
+* Privilege escalation
+* Authorization bypass
+* Application logic manipulation
+* Denial of service
+* Chaining with other vulnerabilities
+
+---
+
+# 🧪 Challenge 2 — Asterion Group Internal Archive Breach
+
+## Vulnerability Chain
+
+The second challenge involved a **multi-stage attack chain** rather than a single vulnerability.
+
+The investigation combined:
+
+* SQL Injection
+* Authentication Bypass
+* Account Enumeration
+* Information Disclosure
+* HTTP Traffic Inspection
+* Source Code Analysis
+* Base64 Decoding
+* Steganographic Extraction
+
+### Attack Chain
+
+```text
+SQL Injection
+      ↓
+Authentication Bypass
+      ↓
+Account Enumeration
+      ↓
+Unauthorized Account Access
+      ↓
+Security Case Investigation
+      ↓
+Burp Suite Traffic Inspection
+      ↓
+Hidden HTML Developer Comment
+      ↓
+Base64 Encoded Data
+      ↓
+Credential / Passphrase Recovery
+      ↓
+Steganographic Extraction
+      ↓
+Hidden Audit Record
+      ↓
+Challenge Objective
+```
+
+---
+
+## 1️⃣ SQL Injection & Authentication Bypass
+
+The login functionality was vulnerable to SQL injection.
+
+Within the authorized challenge environment, a crafted SQL injection technique was used to bypass authentication and enumerate available account records.
+
+The original POC demonstrated that manipulating the SQL query with an `OFFSET` value could reach a different account within the challenge environment.
+
+> **Payload intentionally redacted from the public repository.**
+
+---
+
+## 2️⃣ Security Case Investigation
+
+After obtaining access to the challenge account, the security case **HR-017** was investigated.
+
+The case information referenced an image named:
+
+```text
+london.jpeg
+```
+
+The reported file size did not correspond normally with the visible image data, suggesting that additional information could potentially be embedded within the file.
+
+---
+
+## 3️⃣ Burp Suite Traffic Analysis
+
+**Burp Suite** was used to intercept and inspect HTTP traffic generated by the application.
+
+During analysis of the dashboard response, a hidden developer comment containing a Base64-encoded recovery value was identified.
+
+This demonstrated the risk of exposing sensitive information within client-accessible HTML/source code.
+
+---
+
+## 4️⃣ Base64 Analysis
+
+The discovered Base64-encoded value was decoded using standard Linux command-line utilities.
+
+Example methodology:
+
+```bash
+echo "[REDACTED]" | base64 -d
+```
+
+The decoded value was subsequently used during the next stage of the challenge.
+
+> Sensitive credentials and challenge secrets have intentionally been removed from this public write-up.
+
+---
+
+## 5️⃣ Steganographic Investigation
+
+The recovered passphrase was used with `steghide` against the challenge image.
+
+Sanitized example:
+
+```bash
+steghide extract -sf london.jpeg -p "[REDACTED]"
+```
+
+The extraction produced an audit record containing information required to complete the challenge objective.
+
+---
+
+# 🛠️ Tools Used
+
+| Tool / Technique       | Purpose                                        |
+| ---------------------- | ---------------------------------------------- |
+| **Burp Suite**         | HTTP interception and web application analysis |
+| **Linux CLI**          | Investigation and security testing             |
+| **SQL Injection**      | Authentication and query manipulation testing  |
+| **Base64**             | Encoded-data analysis                          |
+| **steghide**           | Steganographic extraction                      |
+| **Browser / DevTools** | Application and source analysis                |
+
+---
+
+# 🧠 Key Learnings
+
+### 1. Input Validation Matters
+
+User-controlled property paths can introduce serious risks when applications dynamically manipulate JavaScript objects.
+
+### 2. Authentication Must Be Properly Protected
+
+SQL injection in authentication mechanisms can allow attackers to bypass intended access controls and potentially enumerate accounts.
+
+### 3. Client-Side Information Can Become Sensitive
+
+Secrets embedded in HTML comments or other client-accessible resources should never be treated as secure storage.
+
+### 4. Vulnerabilities Can Be Chained
+
+The second challenge demonstrated how several weaknesses can be combined:
+
+```text
+Initial Vulnerability
+        ↓
+Access
+        ↓
+Information Disclosure
+        ↓
+Credential Recovery
+        ↓
+Further Exploitation
+```
+
+A vulnerability does not always need to be critical by itself to contribute to a significant attack chain.
+
+### 5. Documentation Is Part of Security Research
+
+A good security assessment should clearly communicate:
+
+* What was discovered
+* How it was reproduced
+* What the impact was
+* What evidence supports the finding
+* How the issue could be mitigated
+
+---
+
+# 🔐 Responsible Disclosure & Public Release
+
+This repository intentionally **does not publish**:
+
+* Challenge flags
+* Recovered passwords/passphrases
+* Authentication credentials
+* Live challenge server addresses
+* Sensitive challenge artifacts
+* Other information that could interfere with ongoing competition activities
+
+The detailed original POC is retained separately for personal records and can be shared when permitted by the challenge organizers.
+
+---
+
+# 📈 Offensive Security Journey
+
+This project represents part of my hands-on learning journey in:
+
+```text
+Reconnaissance
+      ↓
+Web Application Testing
+      ↓
+Vulnerability Discovery
+      ↓
+Exploitation
+      ↓
+Privilege / Access Analysis
+      ↓
+Post-Exploitation Investigation
+      ↓
+Evidence Collection
+      ↓
+Technical Documentation
+```
+
+My primary area of interest is **offensive security, ethical hacking, and vulnerability research**, with a focus on understanding how real-world web applications can be attacked and how those weaknesses can be identified and mitigated.
+
+---
+
+# 📌 Project Status
+
+**Event:** Terrier Cyber Quest 2026
+**Track:** Bug Hunting
+**Focus:** Web Application Security / Offensive Security
+**Repository Type:** Educational & Portfolio
+**Sensitive Data:** Redacted
+
+---
+
+## ⚠️ Legal & Ethical Notice
+
+All techniques demonstrated in this repository are intended for:
+
+* Authorized penetration testing
+* Cybersecurity education
+* CTFs and security competitions
+* Security research in controlled environments
+
+**Do not use these techniques against systems without explicit authorization.**
+
+---
+
+## 👨‍💻 Author
+
+Vishwa Erroju
+Cybersecurity Enthusiast | Offensive Security Learner | Bug Hunter
+
+> **Learn. Hunt. Exploit. Secure.**
